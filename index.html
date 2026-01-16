@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthLink Pro - NGO Management System</title>
+    <!-- Import Chart.js for the Chart Feature -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* --- CSS Variables & Reset --- */
+        :root {
+            --primary: #0d9488; /* Teal */
+            --primary-dark: #0f766e;
+            --secondary: #f0fdfa;
+            --accent: #f59e0b; /* Amber */
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+            --white: #ffffff;
+            --bg-light: #f3f4f6;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* --- Header --- */
+        header {
+            background: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links button {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            color: var(--text-dark);
+            margin-left: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .nav-links button:hover { color: var(--primary); }
+
+        /* --- Layout --- */
+        main {
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            width: 100%;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-dark);
+            border-left: 5px solid var(--accent);
+            padding-left: 10px;
+        }
+
+        /* --- Stats Grid --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .stat-number { font-size: 2.5rem; font-weight: 700; color: var(--primary); }
+        .stat-label { color: var(--text-light); font-size: 0.9rem; text-transform: uppercase; }
+
+        /* --- NEW: Analytics & Records Section (Split Layout) --- */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Two columns */
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .analytics-grid { grid-template-columns: 1fr; } /* Stack on mobile */
+        }
+
+        .panel {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            height: 100%;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Searchable Table Styling */
+        .search-box {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .search-box:focus { border-color: var(--primary); outline: none; }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table th, .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .data-table th { background-color: #f9fafb; color: var(--text-light); }
+        .data-table tr:hover { background-color: var(--secondary); }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-pending { background: #fef3c7; color: #d97706; }
+        .status-done { background: #d1fae5; color: #059669; }
+
+        /* --- Forms Section --- */
+        .form-container {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 3rem;
+        }
+
+        .tabs { display: flex; background: #e5e7eb; }
+        .tab-btn {
+            flex: 1; padding: 1rem; border: none; background: none; font-weight: 600;
+            cursor: pointer; transition: 0.3s; color: var(--text-light);
+        }
+        .tab-btn.active { background: var(--white); color: var(--primary); border-top: 3px solid var(--primary); }
+
+        .form-content { padding: 2rem; display: none; animation: fadeIn 0.4s ease; }
+        .form-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px;
+            font-family: inherit;
+        }
+        .btn-submit {
+            width: 100%; padding: 1rem; background: var(--primary); color: var(--white);
+            border: none; border-radius: 8px; font-weight: 600; cursor: pointer;
+        }
+        .btn-submit:hover { background: var(--primary-dark); }
+
+        /* --- AI Chatbot --- */
+        .chatbot-widget { position: fixed; bottom: 2rem; right: 2rem; z-index: 1000; display: flex; flex-direction: column; align-items: flex-end; }
+        
+        .chat-toggle {
+            width: 60px; height: 60px; background: var(--accent); border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; color: white; font-size: 1.5rem; border: none;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .chat-window {
+            width: 350px; height: 450px; background: var(--white); border-radius: var(--radius);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15); margin-bottom: 1rem; display: none;
+            flex-direction: column; overflow: hidden; border: 1px solid #e5e7eb;
+        }
+
+        .chat-header { background: var(--primary); color: white; padding: 1rem; display: flex; justify-content: space-between; }
+        .chat-body { flex: 1; padding: 1rem; overflow-y: auto; background: #f9fafb; display: flex; flex-direction: column; gap: 0.8rem; }
+        
+        .message { max-width: 80%; padding: 0.75rem; border-radius: 12px; font-size: 0.9rem; }
+        .bot-msg { background: var(--secondary); color: var(--text-dark); align-self: flex-start; }
+        .user-msg { background: var(--primary); color: white; align-self: flex-end; }
+
+        .chat-footer { padding: 0.75rem; background: var(--white); border-top: 1px solid #e5e7eb; display: flex; gap: 0.5rem; }
+        .chat-footer input { flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 20px; outline: none; }
+        .chat-footer button { background: var(--primary); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; }
+
+        /* --- Toast --- */
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: #065f46; color: #fff; padding: 12px 24px; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.4s; z-index: 2000;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        footer { background: var(--text-dark); color: var(--white); text-align: center; padding: 2rem; margin-top: auto; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <nav>
+            <div class="logo">⚕️ HealthLink Pro</div>
+            <div class="nav-links">
+                <button onclick="scrollToSection('dashboard')">Dashboard</button>
+                <button onclick="scrollToSection('records')">Records</button>
+                <button onclick="scrollToSection('forms')">Registration</button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Stats Section -->
+        <section id="dashboard" class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="patientCount">1,240</div>
+                <div class="stat-label">Patients Assisted</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="volunteerCount">85</div>
+                <div class="stat-label">Active Volunteers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="requestCount">45</div>
+                <div class="stat-label">Pending Requests</div>
+            </div>
+        </section>
+
+        <!-- NEW: Analytics & Records Section -->
+        <h2 class="section-title" id="records">Analytics & Directory</h2>
+        <section class="analytics-grid">
+            
+            <!-- Feature 1: Sample Chart -->
+            <div class="panel">
+                <h3 style="margin-bottom: 1rem; color: var(--text-dark);">Patient Needs Distribution</h3>
+                <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">Visual breakdown of current requests.</p>
+                <div class="chart-container">
+                    <canvas id="needsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Feature 2: Searchable Table -->
+            <div class="panel">
+                <h3 style="margin-bottom: 1rem; color: var(--text-dark);">Recent Requests</h3>
+                <input type="text" id="searchInput" class="search-box" placeholder="🔍 Search by patient name..." onkeyup="filterTable()">
+                
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Need</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- JS will populate this -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Forms Section -->
+        <h2 class="section-title" id="forms">Support Registration</h2>
+        <section class="form-container">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('patient')">Patient Support</button>
+                <button class="tab-btn" onclick="switchTab('volunteer')">Volunteer Registration</button>
+            </div>
+
+            <!-- Patient Form -->
+            <div id="patient-form" class="form-content active">
+                <form onsubmit="handlePatientSubmit(event)">
+                    <div class="form-group">
+                        <label>Patient Name</label>
+                        <input type="text" id="p-name" required placeholder="e.g. John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label>Request Type</label>
+                        <select id="p-issue" required>
+                            <option value="medicine">Medicine</option>
+                            <option value="appointment">Doctor Appointment</option>
+                            <option value="emergency">Emergency</option>
+                            <option value="consultation">Consultation</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="p-desc" rows="3" placeholder="Details..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-submit">Submit Request</button>
+                </form>
+            </div>
+
+            <!-- Volunteer Form -->
+            <div id="volunteer-form" class="form-content">
+                <form onsubmit="handleVolunteerSubmit(event)">
+                    <div class="form-group">
+                        <label>Volunteer Name</label>
+                        <input type="text" id="v-name" required placeholder="e.g. Jane Smith">
+                    </div>
+                    <div class="form-group">
+                        <label>Skillset</label>
+                        <select id="v-skill" required>
+                            <option value="driver">Driver</option>
+                            <option value="doctor">Doctor</option>
+                            <option value="nurse">Nurse</option>
+                            <option value="logistics">Logistics</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-submit" style="background-color: var(--accent);">Register Volunteer</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- AI Chatbot -->
+    <div class="chatbot-widget">
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header">
+                <span>🤖 HealthBot AI</span>
+                <span style="cursor: pointer;" onclick="toggleChat()">✕</span>
+            </div>
+            <div class="chat-body" id="chatBody">
+                <div class="message bot-msg">Hi! I'm your automated assistant. I can help with appointments, volunteer info, or finding medicine.</div>
+            </div>
+            <div class="chat-footer">
+                <input type="text" id="chatInput" placeholder="Ask me..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+        <button class="chat-toggle" onclick="toggleChat()">💬</button>
+    </div>
+
+    <div id="toast" class="toast">✅ Action Successful</div>
+
+    <footer>
+        <p>&copy; 2023 HealthLink Pro NGO. Full Concept Assignment.</p>
+    </footer>
+
+    <script>
+        // --- 1. Global State & Chart Initialization ---
+        let stats = { patients: 1240, volunteers: 85, requests: 45 };
+        
+        // Dummy Data for Table
+        const recentRequests = [
+            { name: "Alice Johnson", need: "Medicine", status: "Pending" },
+            { name: "Robert Smith", need: "Appointment", status: "Done" },
+            { name: "Maria Garcia", need: "Emergency", status: "Pending" },
+            { name: "David Lee", need: "Consultation", status: "Pending" },
+            { name: "Sarah Connor", need: "Medicine", status: "Done" }
+        ];
+
+        // Initialize Chart.js
+        let needsChart;
+        function initChart() {
+            const ctx = document.getElementById('needsChart').getContext('2d');
+            needsChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Medicine', 'Appointment', 'Emergency', 'Consultation'],
+                    datasets: [{
+                        data: [10, 5, 2, 8], // Initial dummy data
+                        backgroundColor: ['#0d9488', '#f59e0b', '#ef4444', '#3b82f6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // Initialize Table
+        function renderTable(data = recentRequests) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = ''; // Clear current
+
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                const statusClass = row.status === 'Done' ? 'status-done' : 'status-pending';
+                tr.innerHTML = `
+                    <td>${row.name}</td>
+                    <td>${row.need}</td>
+                    <td><span class="status-badge ${statusClass}">${row.status}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- 2. Basic Feature: Search/Filter Logic ---
+        function filterTable() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const filteredData = recentRequests.filter(req => 
+                req.name.toLowerCase().includes(input)
+            );
+            renderTable(filteredData);
+        }
+
+        // --- 3. Core Logic: Tabs, Forms, Dashboard ---
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.form-content').forEach(c => c.classList.remove('active'));
+            
+            if(tab === 'patient') {
+                document.querySelector('.tab-btn:first-child').classList.add('active');
+                document.getElementById('patient-form').classList.add('active');
+            } else {
+                document.querySelector('.tab-btn:last-child').classList.add('active');
+                document.getElementById('volunteer-form').classList.add('active');
+            }
+        }
+
+        function updateDashboard() {
+            document.getElementById('patientCount').innerText = stats.patients.toLocaleString();
+            document.getElementById('volunteerCount').innerText = stats.volunteers;
+            document.getElementById('requestCount').innerText = stats.requests;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = "✅ " + msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Handle Patient Submit (Updates Chart & Table)
+        function handlePatientSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('p-name').value;
+            const issue = document.getElementById('p-issue').value;
+
+            // 1. Update Stats
+            stats.patients++;
+            stats.requests++;
+            updateDashboard();
+
+            // 2. Update Chart Data dynamically
+            const labels = ['medicine', 'appointment', 'emergency', 'consultation'];
+            const index = labels.indexOf(issue);
+            if(index !== -1) {
+                needsChart.data.datasets[0].data[index]++; // Increment chart slice
+                needsChart.update(); // Re-render chart
+            }
+
+            // 3. Add to Recent Table
+            recentRequests.unshift({ name: name, need: capitalize(issue), status: "Pending" });
+            renderTable(); // Refresh table
+
+            showToast(`Request added for ${name}.`);
+            e.target.reset();
+        }
+
+        // Handle Volunteer Submit
+        function handleVolunteerSubmit(e) {
+            e.preventDefault();
+            stats.volunteers++;
+            updateDashboard();
+            showToast("Volunteer registered successfully!");
+            e.target.reset();
+        }
+
+        // --- 4. AI Chatbot Logic ---
+        function toggleChat() {
+            const win = document.getElementById('chatWindow');
+            win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function handleKeyPress(e) { if(e.key === 'Enter') sendMessage(); }
+
+        function addMsg(txt, type) {
+            const body = document.getElementById('chatBody');
+            const div = document.createElement('div');
+            div.className = `message ${type === 'bot' ? 'bot-msg' : 'user-msg'}`;
+            div.innerText = txt;
+            body.appendChild(div);
+            body.scrollTop = body.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const txt = input.value.trim();
+            if(!txt) return;
+
+            addMsg(txt, 'user');
+            input.value = '';
+
+            setTimeout(() => {
+                let reply = "I can help with 'volunteer', 'appointment', or 'medicine' requests.";
+                const lower = txt.toLowerCase();
+                if(lower.includes('hello')) reply = "Hello! How can I assist you today?";
+                else if(lower.includes('volunteer')) reply = "You can register as a volunteer in the 'Registration' tab below.";
+                else if(lower.includes('medicine')) reply = "Please fill out the Patient Support form to request medicine.";
+                else if(lower.includes('appointment')) reply = "We have doctors available. Submit a request in the form section.";
+                
+                addMsg(reply, 'bot');
+            }, 800);
+        }
+
+        // Helper
+        function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+        
+        // Initialize on Load
+        window.onload = function() {
+            initChart();
+            renderTable();
+        };
+    </script>
+</body>
+</html>
